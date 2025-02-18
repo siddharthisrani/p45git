@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Performance Tracker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .student {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        .student-name {
+            flex-grow: 1;
+            text-align: left;
+        }
+        .stars-container {
+            display: flex;
+            gap: 5px;
+            min-width: 120px;
+            justify-content: center;
+        }
+        .star {
+            font-size: 30px;
+            color: lightgray;
+            background: linear-gradient(to right, gold 0%, gold 0%, lightgray 0%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        button {
+            padding: 5px 10px;
+            cursor: pointer;
+            border: none;
+            background: #007bff;
+            color: white;
+            border-radius: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .delete-btn {
+            background: #dc3545;
+        }
+        .delete-btn:hover {
+            background: #a71d2a;
+        }
+        .update-btn {
+            background: #ffc107;
+        }
+        .update-btn:hover {
+            background: #d39e00;
+        }
+        .marks {
+            color: green;
+        }
+    </style>
+</head>
+<body>
+    <h1>Student Performance Tracker</h1>
+    <div class="container">
+        <input type="text" id="newStudent" placeholder="Enter Student Name">
+        <button onclick="addStudent()">Add Student</button>
+    </div>
+    <div class="container" id="studentList"></div>
+    <script>
+        let students = JSON.parse(localStorage.getItem("students")) || [];
+        
+        function saveToLocalStorage() {
+            localStorage.setItem("students", JSON.stringify(students));
+        }
+        
+        function updateStars(student, starContainer) {
+            let marks = student.marks;
+            let starsHTML = "";
+            for (let i = 0; i < 5; i++) {
+                let percentage = Math.min(100, Math.max(0, ((marks - i * 20) / 20) * 100));
+                if (marks < i * 20) percentage = 0;
+                starsHTML += `<span class="star" style="background: linear-gradient(to right, gold ${percentage}%, lightgray ${percentage}%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">★</span>`;
+            }
+            starContainer.innerHTML = starsHTML;
+        }
+        
+        function changeMarks(index, value) {
+            students[index].marks = Math.min(100, Math.max(0, students[index].marks + value));
+            saveToLocalStorage();
+            loadStudents();
+        }
+        
+        function addStudent() {
+            let newName = document.getElementById("newStudent").value.trim();
+            if (newName) {
+                students.push({ name: newName, marks: 0 });
+                saveToLocalStorage();
+                loadStudents();
+                document.getElementById("newStudent").value = "";
+            }
+        }
+        
+        function deleteStudent(index) {
+            students.splice(index, 1);
+            saveToLocalStorage();
+            loadStudents();
+        }
+        
+        function updateStudent(index) {
+            let newName = prompt("Enter new name:", students[index].name);
+            if (newName) {
+                students[index].name = newName.trim();
+                saveToLocalStorage();
+                loadStudents();
+            }
+        }
+        
+        function loadStudents() {
+            document.getElementById("studentList").innerHTML = "";
+            students.forEach((student, index) => {
+                let studentDiv = document.createElement("div");
+                studentDiv.classList.add("student");
+                studentDiv.innerHTML = `
+                    <span class="student-name">${student.name} <span class="marks">${student.marks}</span></span>
+                    <span class="stars-container"></span>
+                    <button onclick="changeMarks(${index}, 1)">+1 Mark</button>
+                    <button onclick="changeMarks(${index}, -1)">-1 Mark</button>
+                    <button class="update-btn" onclick="updateStudent(${index})">Edit</button>
+                    <button class="delete-btn" onclick="deleteStudent(${index})">Delete</button>
+                `;
+                document.getElementById("studentList").appendChild(studentDiv);
+                updateStars(student, studentDiv.querySelector(".stars-container"));
+            });
+        }
+        
+        loadStudents();
+    </script>
+</body>
+</html>
